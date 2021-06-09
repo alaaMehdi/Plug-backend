@@ -12,7 +12,7 @@ const signInController = async (req, res, next) => {
     req.body.email, 
     req.body.password
   )
-  return res.status(signinService.status).json(signinService.extras)
+  return res.json(signinService)
 }
 
 const updateController = async (req, res, next) => {
@@ -23,7 +23,7 @@ const updateController = async (req, res, next) => {
     req.body,
     req.params.id
   )
-  return res.status(updateService.status).json(updateService.extras)
+  return res.json(updateService.extras)
 }
 
 const signUpController = async (req, res, next) => {
@@ -39,6 +39,7 @@ const resetPasswordRequestController = async (req, res, next) => {
 }
 
 const resetPasswordController = async (req, res, next) => {
+  console.log('resetPasswordController');
   const resetPasswordService = await resetPassword(
     req.body.userId ,
     req.body.token ,

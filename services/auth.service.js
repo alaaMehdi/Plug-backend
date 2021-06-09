@@ -43,27 +43,40 @@ const signin = async (_email, _password) => {
       }
     }
   })
+
   return (response)
 }
 
 const signup = async (data) => {
-  let user = await User.findOne({ email: data.email })
+  let response;
+  let user = await User.findOne({ email: data.email, username: data.username })
   if (user) {
-    return ({
+    response = {
       success: false,
       status: 203,
-      extras: 'Email already exist'
-    })
+      extras: 'User already exist'
+    }
   }
   user = new User(data);
   const token = JWT.sign({ id: user._id }, JWTSecret)
-  await user.save()
-  return (data = {
-    userId: user._id,
-    email: user.email,
-    username: user.username,
-    token: token,
-  })
+
+  try {
+    await user.save()
+    response = {
+      success: true,
+      status: 200,
+      extras: { message: 'User created' }
+    }
+  } catch (e) {
+    response = {
+      success: false,
+      status: 417,
+      extras: { message: 'User already exist', error: e }
+    }
+  }
+
+  return (response)
+ 
 }
 
 const update = async (body, params) => {
@@ -75,9 +88,9 @@ const update = async (body, params) => {
   await User.updateOne({
     email: body.email,
     password: body.password
-  },{
+  }, {
     email: body.newEmail,
-    password : body.newPass
+    password: body.newPass
   }, (err, user) => {
     if (err) {
       response = {
@@ -108,14 +121,16 @@ const update = async (body, params) => {
 }
 
 const requestPasswordReset = async (email) => {
-
+  console.log('ReqPassRest');
+  console.log(email);
   const user = await User.findOne({ email })
 
   if (!user) {
+    console.log('!user');
     return ({
       success: false,
       status: 203,
-      extras: 'User does not exist'
+      extras: { message: 'User email does not exist' }
     })
   }
   let token = await Token.findOne({ userId: user._id })
@@ -134,14 +149,27 @@ const requestPasswordReset = async (email) => {
     name: user.name,
     link: link,
   }, "./template/requestResetPassword.handlebars")
-  return link
+
+  return ({
+    success: true,
+    status: 200,
+    extras: {
+      message: 'User founded and the link sent to email',
+      link: link
+    }
+  })
 }
 
 const resetPassword = async (userId, token, password) => {
+  console.log('userId')
   console.log(userId)
+  console.log('token')
   console.log(token)
+  console.log('password')
   console.log(password)
   let passwordResetToken = await Token.findOne({ userId })
+  console.log('passwordResetToken')
+  console.log(passwordResetToken)
   if (!passwordResetToken) {
     return ({
       success: false,
@@ -149,7 +177,9 @@ const resetPassword = async (userId, token, password) => {
       extras: 'Error getting informations'
     })
   }
-  const isValid = await bcrypt.compare(token, passwordResetToken.token)
+  const isValid = await bcrypt.compare(token[1], passwordResetToken.token)
+  console.log("isValid");
+  console.log(isValid);
   if (!isValid) {
     return ({
       success: false,
