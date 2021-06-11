@@ -1,16 +1,16 @@
 const JWT = require("jsonwebtoken")
 const User = require("../models/User.model")
+const Poll = require("../models/Poll.model")
 const Token = require("../models/Token.model")
 const sendEmail = require("../utils/email/sendEmail")
 const crypto = require("crypto")
 const bcrypt = require("bcrypt")
-const { response } = require("express")
 
 const JWTSecret = process.env.JWT_SECRET;
 const bcryptSalt = process.env.BCRYPT_SALT;
 const clientURL = process.env.CLIENT_URL;
 
-
+const profile = async (data) => { }
 
 const signin = async (_email, _password) => {
   let response;
@@ -35,15 +35,25 @@ const signin = async (_email, _password) => {
         extras: { message: 'Email or passowrd incorrect' }
       }
     } else {
-      // console.log(user)
+      const token = JWT.sign(
+        { id: user._id }, 
+        JWTSecret, 
+        { expiresIn: '24h' }
+      )
       response = {
         success: true,
         status: 200,
-        extras: { message: 'User found' }
+        extras: {
+          message: 'User found',
+          currentuser: {
+            userId: user._id,
+            token: token
+          }
+        }
       }
     }
   })
-
+  console.log(response);
   return (response)
 }
 
@@ -58,7 +68,7 @@ const signup = async (data) => {
     }
   }
   user = new User(data);
-  const token = JWT.sign({ id: user._id }, JWTSecret)
+
 
   try {
     await user.save()
@@ -74,9 +84,7 @@ const signup = async (data) => {
       extras: { message: 'User already exist', error: e }
     }
   }
-
   return (response)
- 
 }
 
 const update = async (body, params) => {
@@ -107,7 +115,6 @@ const update = async (body, params) => {
         extras: { message: 'Erreur updating the user' }
       }
     } else {
-      // console.log(user)
       response = {
         success: true,
         status: 200,
@@ -121,8 +128,6 @@ const update = async (body, params) => {
 }
 
 const requestPasswordReset = async (email) => {
-  console.log('ReqPassRest');
-  console.log(email);
   const user = await User.findOne({ email })
 
   if (!user) {
@@ -161,15 +166,8 @@ const requestPasswordReset = async (email) => {
 }
 
 const resetPassword = async (userId, token, password) => {
-  console.log('userId')
-  console.log(userId)
-  console.log('token')
-  console.log(token)
-  console.log('password')
-  console.log(password)
   let passwordResetToken = await Token.findOne({ userId })
-  console.log('passwordResetToken')
-  console.log(passwordResetToken)
+
   if (!passwordResetToken) {
     return ({
       success: false,
@@ -206,7 +204,108 @@ const resetPassword = async (userId, token, password) => {
   return true
 }
 
+const createPoll = async (data) => {
+  /** @Exemple
+   * title:What is your favorit COLOR ?
+     options:{ "option1" : {"desc":"red", "value":5.0},"option2": {"desc":"blue", "value":3.0}, "option3": {"desc":"green", "value":11.0},"option4": {"desc":"yellow", "value":8.0}}
+   */
+  let response
+  const poll = new Poll(data)
+  try {
+    await poll.save()
+    response = {
+      success: true,
+      status: 200,
+      extras: { message: 'Poll created' }
+    }
+  } catch (e) {
+    response = {
+      success: false,
+      status: 417,
+      extras: {
+        message: 'Cannot create a poll',
+        error: e
+      }
+    }
+  }
 
+  return (response)
+
+}
+
+const votePoll = async (data) => {
+
+  let response
+  let poll = await Poll.findById({ _id: data._id })
+  let voteOptions = poll.options
+  let canVote = poll.usersWhoVoted.includes(data.email)
+
+  if (canVote) {
+    response = {
+      success: false,
+      status: 203,
+      extras: 'User already voted'
+    }
+  }
+  else {
+    poll.usersWhoVoted.push(data.email)
+    let v = voteOptions.option2.value
+    v++
+    voteOptions.option2.value = v
+    /* for getting all the vote Options
+    Object.keys(voteOptions).forEach(
+      option => console.log(voteOptions[option])
+    )
+    */
+    try {
+      await poll.updateOne({
+        usersWhoVoted: poll.usersWhoVoted
+      })
+      await poll.updateOne({
+        options: voteOptions
+      })
+
+      response = {
+        success: true,
+        status: 200,
+        extras: {
+          message: 'Poll updated',
+          poll: poll
+        }
+      }
+    } catch (e) {
+      response = {
+        success: false,
+        status: 417,
+        extras: {
+          message: 'Cannot update a poll',
+          error: e
+        }
+      }
+    }
+  }
+
+  return (response)
+}
+
+const getAllPolls = async () => {
+  let response
+  await Poll.find()
+    .then(polls => response = {
+      success: true,
+      status: 200,
+      extras: {
+        message: 'Getting all polls',
+        polls: polls
+      }
+    })
+    .catch(error => response = {
+      success: false,
+      status: 400,
+      extras: { message: error }
+    })
+  return (response)
+}
 
 module.exports = {
   signin,
@@ -214,4 +313,8 @@ module.exports = {
   update,
   requestPasswordReset,
   resetPassword,
+  profile,
+  createPoll,
+  votePoll,
+  getAllPolls,
 }
