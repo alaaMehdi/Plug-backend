@@ -24,4 +24,6 @@
   "devDependencies": {
     "@types/cors": "^2.8.10"
   }
+  ,
+  "type": "commonjs"
 }

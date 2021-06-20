@@ -1,10 +1,12 @@
-const JWT = require("jsonwebtoken")
-const User = require("../models/User.model")
-const Poll = require("../models/Poll.model")
-const Token = require("../models/Token.model")
-const sendEmail = require("../utils/email/sendEmail")
+const JWT = require('jsonwebtoken')
+const User = require('../models/user.model')
+const Poll = require('../models/poll.model')
+const Task = require('../models/task.model')
+const Token = require('../models/token.model')
+const sendEmail = require('../utils/email/sendEmail')
 const crypto = require("crypto")
 const bcrypt = require("bcrypt")
+const { getAllTasksController } = require('../controllers/auth.controller')
 
 const JWTSecret = process.env.JWT_SECRET;
 const bcryptSalt = process.env.BCRYPT_SALT;
@@ -47,6 +49,7 @@ const signin = async (_email, _password) => {
           message: 'User found',
           currentuser: {
             userId: user._id,
+            email: user.email,
             token: token
           }
         }
@@ -307,6 +310,76 @@ const getAllPolls = async () => {
   return (response)
 }
 
+const createTask = async (data) => {
+  let response
+  const task = new Task(data)
+  try {
+    await task.save()
+    response = {
+      success: true,
+      status: 200,
+      extras: { message: 'Task created' }
+    }
+  } catch (e) {
+    response = {
+      success: false,
+      status: 417,
+      extras: {
+        message: 'Cannot create a task',
+        error: e
+      }
+    }
+  }
+
+  return (response)
+
+}
+
+const getAllTasks = async () => {
+  let response
+  await Task.find()
+    .then(tasks => response = {
+      success: true,
+      status: 200,
+      extras: {
+        message: 'Getting all Tasks',
+        tasks: tasks
+      }
+    })
+    .catch(error => response = {
+      success: false,
+      status: 400,
+      extras: { message: error }
+    })
+  return (response)
+}
+
+const deleteTask = async (name) => {
+  console.log(name);
+  let response
+  try {
+    let x = await Task.deleteOne({name : name})
+    response = {
+      success: true,
+      status: 200,
+      extras: { message: 'Task deleted' }
+    }
+    console.log(x);
+  } catch (e) {
+    response = {
+      success: false,
+      status: 417,
+      extras: {
+        message: 'Cannot delete a task',
+        error: e
+      }
+    }
+  }
+
+  return (response)
+
+}
+
 module.exports = {
   signin,
   signup,
@@ -317,4 +390,7 @@ module.exports = {
   createPoll,
   votePoll,
   getAllPolls,
+  createTask,
+  getAllTasks,
+  deleteTask,
 }

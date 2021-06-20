@@ -8,7 +8,30 @@ const {
   createPoll,
   votePoll,
   getAllPolls,
+  createTask,
+  getAllTasks,
+  deleteTask,
 } = require("../services/auth.service")
+
+const createTaskController = async (req, res, next) => {
+  console.log('TaskCreating');
+  const createTaskService = await createTask(req.body)
+
+  return res.json(createTaskService)
+}
+
+const deleteTaskController = async (req, res, next) => {
+  // console.log('req.params.name');
+  // console.log(req.params.name);
+  const deleteTaskService = await deleteTask(req.params.name)
+
+  return res.json(deleteTaskService)
+}
+
+const getAllTasksController = async (req, res, next) => {
+  const getAllTasksService = await getAllTasks()
+  return res.json(getAllTasksService)
+}
 
 const createPollController = async (req, res, next) => {
   console.log('createPollController');
@@ -81,4 +104,7 @@ module.exports = {
   createPollController,
   getAllPollsController,
   votePollController,
+  createTaskController,
+  getAllTasksController,
+  deleteTaskController,
 }

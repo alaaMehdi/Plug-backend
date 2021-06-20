@@ -8,6 +8,9 @@ const {
     createPollController,
     votePollController,
     getAllPollsController,
+    createTaskController,
+    getAllTasksController,
+    deleteTaskController,
   } = require("../controllers/auth.controller")
 const User = require('../models/user.model')
 const router = express.Router()
@@ -17,6 +20,10 @@ router.post("/auth/signIN", signInController);
 router.post("/auth/signUP", signUpController);
 router.post("/auth/requestResetPassword", resetPasswordRequestController);
 router.post("/auth/resetPassword", resetPasswordController);
+
+router.post("/createtask", createTaskController);
+router.get("/tasks", getAllTasksController);
+router.delete("/task/:name", deleteTaskController);
 
 router.post("/createpoll", createPollController);
 router.post("/vote", auth, votePollController);
