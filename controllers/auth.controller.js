@@ -5,51 +5,8 @@ const {
   requestPasswordReset,
   resetPassword,
   profile,
-  createPoll,
-  votePoll,
-  getAllPolls,
-  createTask,
-  getAllTasks,
-  deleteTask,
 } = require("../services/auth.service")
 
-const createTaskController = async (req, res, next) => {
-  console.log('TaskCreating');
-  const createTaskService = await createTask(req.body)
-
-  return res.json(createTaskService)
-}
-
-const deleteTaskController = async (req, res, next) => {
-  // console.log('req.params.name');
-  // console.log(req.params.name);
-  const deleteTaskService = await deleteTask(req.params.name)
-
-  return res.json(deleteTaskService)
-}
-
-const getAllTasksController = async (req, res, next) => {
-  const getAllTasksService = await getAllTasks()
-  return res.json(getAllTasksService)
-}
-
-const createPollController = async (req, res, next) => {
-  console.log('createPollController');
-  const createPollService = await createPoll(req.body)
-
-  return res.json(createPollService)
-}
-
-const votePollController = async (req, res, next) => {
-  console.log('createPollController');
-  const votePollService = await votePoll(req.body)
-  return res.json(votePollService)
-}
-
-const getAllPollsController = async (req, res, next) => {
-  const getAllPollsService = await getAllPolls()
-  return res.json(getAllPollsService)
-}
 
 
 const userProfileController = async (req, res, next) => {
@@ -101,10 +58,4 @@ module.exports = {
   resetPasswordRequestController,
   resetPasswordController,
   userProfileController,
-  createPollController,
-  getAllPollsController,
-  votePollController,
-  createTaskController,
-  getAllTasksController,
-  deleteTaskController,
 }
